@@ -3,7 +3,7 @@
  * Demonstrates how frontend would interact with the retrieval engine
  */
 
-import { RetrievalEngine } from "./index";
+import { RetrievalEngine } from "../../../packages/retrieval/index";
 
 export class SearchApi {
   

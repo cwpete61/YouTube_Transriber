@@ -26,15 +26,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       icon: "h-10 w-10"
     };
     
-    // Filter out asChild from props before spreading to button element
-    const filteredProps = { ...props };
-    delete filteredProps.asChild;
-    
     return (
       <button
         className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         ref={ref}
-        {...filteredProps}
+        {...props}
       />
     );
   }
