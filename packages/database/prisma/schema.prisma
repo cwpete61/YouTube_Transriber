@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+// User and Auth
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  memberships   OrganizationMembership[]
+  invitations   Invitation[] @relation("InvitedBy")
+  
+  // Application data
+  records       Record[]
+  auditLogs     AuthAuditLog[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// SaaS Organizations
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     OrganizationMembership[]
+  invitations Invitation[]
+  records     Record[]
+}
+
+model OrganizationMembership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String       // e.g., "OWNER", "ADMIN", "MEMBER"
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+model Invitation {
+  id             String       @id @default(cuid())
+  email          String
+  organizationId String
+  invitedById    String
+  role           String
+  token          String       @unique
+  expires        DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("InvitedBy", fields: [invitedById], references: [id])
+}
+
+// Application Logic
+enum SourceType {
+  URL
+  YOUTUBE
+  IMAGE
+  SCAN
+  NOTE
+}
+
+model Record {
+  id            String    @id @default(cuid())
+  title         String
+  sourceType    SourceType
+  sourceUrl     String?
+  description   String?
+  cleanText     String?   @db.Text
+  summaryShort  String?   @db.Text
+  summaryLong   String?   @db.Text
+  transcript    String?   @db.Text
+  ocrText       String?   @db.Text
+  metadata      Json?
+  assetId       String?   @unique
+  
+  ownerId       String
+  organizationId String?
+  
+  createdAt     DateTime  @default(now())
+  capturedAt    DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  owner         User          @relation(fields: [ownerId], references: [id])
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  asset         Asset?        @relation(fields: [assetId], references: [id])
+  chunks        RecordChunk[]
+  tags          RecordTag[]
+  entities      Entity[]
+}
+
+model RecordChunk {
+  id           String   @id @default(cuid())
+  recordId     String
+  chunkIndex   Int
+  chunkText    String   @db.Text
+  // embedding is handled via pgvector, which Prisma doesn't natively map easily without extensions or raw sql
+  // For now, we define it as Unsupported if we want to use migrations, or just handle it separately.
+  // Prisma 5+ supports pgvector via extensions.
+  tokenCount   Int
+  createdAt    DateTime @default(now())
+
+  record       Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  color     String?
+  
+  records   RecordTag[]
+}
+
+model RecordTag {
+  recordId String
+  tagId    String
+
+  record   Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([recordId, tagId])
+}
+
+model Asset {
+  id            String   @id @default(cuid())
+  fileName      String
+  mimeType      String
+  fileSize      Int
+  storagePath   String
+  thumbnailPath String?
+  checksum      String?
+  createdAt     DateTime @default(now())
+
+  record        Record?
+}
+
+model Entity {
+  id          String   @id @default(cuid())
+  recordId    String
+  name        String
+  type        String
+  confidence  Float    @default(1.0)
+  createdAt   DateTime @default(now())
+
+  record      Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+}
+
+model AuthAuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  event     String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+}

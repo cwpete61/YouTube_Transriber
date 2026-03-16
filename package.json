@@ -1,0 +1,34 @@
+{
+  "name": "searchable-knowledge-archive",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "start-dev": "docker-compose up -d && turbo run dev",
+    "start-workers": "turbo run start-workers --filter=workers",
+    "run-migrations": "turbo run db:migrate",
+    "seed-roles": "turbo run db:seed:roles",
+    "seed-admin": "turbo run db:seed:admin",
+    "run-tests": "turbo run test",
+    "run-auth-tests": "turbo run test:auth",
+    "run-security-checks": "turbo run security-check"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "agents/*"
+  ],
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "prettier": "latest",
+    "turbo": "latest",
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "npm@10.2.4",
+  "dependencies": {
+    "@prisma/client": "^7.5.0",
+    "bcryptjs": "^3.0.3"
+  }
+}

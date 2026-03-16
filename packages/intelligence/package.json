@@ -1,0 +1,17 @@
+{
+  "name": "@antigravity/intelligence",
+  "version": "1.0.0",
+  "description": "Intelligence Layer for Searchable Knowledge Archive System",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "intelligence",
+    "ai",
+    "knowledge",
+    "archive"
+  ],
+  "author": "Antigravity Team",
+  "license": "MIT"
+}

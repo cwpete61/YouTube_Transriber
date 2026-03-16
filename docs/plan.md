@@ -134,7 +134,6 @@ updated_at | timestamp | record update
 
 Chunked content for embeddings.
 
-
 record_chunks
 
 
@@ -154,7 +153,6 @@ created_at | timestamp
 
 ## Tags
 
-
 tags
 
 
@@ -169,7 +167,6 @@ color | text
 
 ## Record Tags
 
-
 record_tags
 
 
@@ -181,7 +178,6 @@ tag_id | uuid
 ---
 
 ## Assets
-
 
 assets
 
@@ -201,7 +197,6 @@ checksum | text
 ## Entities
 
 Detected people, tools, companies, etc.
-
 
 entities
 
